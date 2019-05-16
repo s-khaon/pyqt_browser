@@ -94,13 +94,52 @@
 #     win.show()
 #     win.after()
 #     sys.exit(app.exec_())
+from time import time
 
 from PyQt5 import QtWebEngineWidgets, QtWidgets, QtCore
-from PyQt5.QtCore import QUrl
+from PyQt5.QtCore import QUrl, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWebChannel import QWebChannel
+from PyQt5.QtWidgets import QMainWindow, QMessageBox
 
 from settings import HOME_HOST
+
+
+class WebEngineView(QtWebEngineWidgets.QWebEngineView):
+    customSignal = pyqtSignal(str)
+
+    def __init__(self,*args, **kwargs):
+        super(WebEngineView, self).__init__(*args, **kwargs)
+        self.channel = QWebChannel(self)
+        # 把自身对象传递进去
+        self.channel.registerObject('Bridge', self)
+        # 设置交互接口
+        self.page().setWebChannel(self.channel)
+        # self.page().loadStarted.connect(self.onLoadStart)
+        # self._script = open('./qwebchannel.js', 'rb').read().decode()
+
+    # def onLoadStart(self):
+    #     print("here")
+    #     self.page().runJavaScript(self._script)
+
+    # 注意pyqtSlot用于把该函数暴露给js可以调用
+    @pyqtSlot(str)
+    def callFromJs(self, text):
+        print(text)
+        QMessageBox.information(self, "提示", "来自js调用：{}".format(text))
+
+    def sendCustomSignal(self):
+        # 发送自定义信号
+        self.customSignal.emit('当前时间: ' + str(time()))
+
+    @pyqtSlot(str)
+    @pyqtSlot(QUrl)
+    def load(self, url):
+        '''
+        eg: load("https://pyqt5.com")
+        :param url: 网址
+        '''
+        return super(WebEngineView, self).load(QUrl(url))
 
 
 class MainWindow(QMainWindow):
@@ -109,7 +148,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("森果批发收银台")
         self.setWindowIcon(QIcon("./alipay.png"))
         self.showMaximized()
-        self.browser = QtWebEngineWidgets.QWebEngineView()
+        self.browser = WebEngineView()
         self.browser.showMaximized()
         self.browser.setWindowTitle("森果批发收银台")
         self.browser.setWindowIcon(QIcon("./alipay.png"))
