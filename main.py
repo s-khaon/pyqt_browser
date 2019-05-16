@@ -98,8 +98,25 @@
 from PyQt5 import QtWebEngineWidgets, QtWidgets, QtCore
 from PyQt5.QtCore import QUrl
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QMainWindow
 
 from settings import HOME_HOST
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super(MainWindow, self).__init__()
+        self.setWindowTitle("森果批发收银台")
+        self.setWindowIcon(QIcon("./alipay.png"))
+        self.showMaximized()
+        self.browser = QtWebEngineWidgets.QWebEngineView()
+        self.browser.showMaximized()
+        self.browser.setWindowTitle("森果批发收银台")
+        self.browser.setWindowIcon(QIcon("./alipay.png"))
+        page = WebEnginePage(self.browser)
+        self.browser.setPage(page)
+        self.browser.load(QUrl(HOME_HOST))
+        self.setCentralWidget(self.browser)
 
 
 class WebEnginePage(QtWebEngineWidgets.QWebEnginePage):
@@ -120,12 +137,6 @@ class WebEnginePage(QtWebEngineWidgets.QWebEnginePage):
 if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    view = QtWebEngineWidgets.QWebEngineView()
-    view.showMaximized()
-    view.setWindowTitle("森果批发收银台")
-    view.setWindowIcon(QIcon("./alipay.png"))
-    page = WebEnginePage(view)
-    view.setPage(page)
-    view.load(QUrl(HOME_HOST))
-    view.show()
+    win = MainWindow()
+    win.show()
     sys.exit(app.exec_())
